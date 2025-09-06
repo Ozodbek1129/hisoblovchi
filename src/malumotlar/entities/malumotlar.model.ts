@@ -11,7 +11,10 @@ export class Malumot extends Model<Malumot> {
 
   @Column({
     type: DataType.DATE,
-    allowNull: false,
+    get() {
+      const rawValue = this.getDataValue('sana');
+      return rawValue ? rawValue.toISOString().split('T')[0] : null;
+    },
   })
   sana: Date;
 
@@ -33,39 +36,55 @@ export class Malumot extends Model<Malumot> {
   })
   davlatRaqami: string;
 
-  @Column({
-    type: DataType.BOOLEAN,
-    defaultValue: false,
-  })
-  gazlashgan: boolean;
+  @Column({ type: DataType.INTEGER, defaultValue: 0 })
+  gazlashgan: number;
+  
 
   @Column({
-    type: DataType.STRING,
+    type: DataType.INTEGER,
     allowNull: true,
   })
-  ruxsatnoma: string;
+  ruxsatnoma: number;
 
   @Column({
-    type: DataType.DATE,
+    type: DataType.INTEGER,
     allowNull: true,
   })
-  texasmotr: Date;
+  texasmotr?: number;
 
   @Column({
-    type: DataType.DECIMAL,
+    type: DataType.INTEGER,
     defaultValue: 0,
   })
   davlatTolovi: number;
 
   @Column({
-    type: DataType.DECIMAL,
+    type: DataType.INTEGER,
     defaultValue: 0,
   })
   smart: number;
 
   @Column({
-    type: DataType.DECIMAL,
+    type: DataType.INTEGER,
     defaultValue: 0,
   })
   umumiySumma: number;
+
+  @Column({
+    type: DataType.INTEGER,
+    defaultValue: 0,
+  })
+  gazakt: number;
+
+  @Column({
+    type: DataType.INTEGER,
+    defaultValue: 0,
+  })
+  gazaktTrip: number;
+
+  @Column({
+    type: DataType.INTEGER,
+    defaultValue: 0,
+  })
+  sugurta: number;
 }

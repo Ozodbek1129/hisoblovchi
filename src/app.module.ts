@@ -3,6 +3,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { Malumot } from './malumotlar/entities/malumotlar.model';
 import { MalumotlarModule } from './malumotlar/malumotlar.module';
+import { User } from './users/users.model';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -19,12 +21,14 @@ import { MalumotlarModule } from './malumotlar/malumotlar.module';
         username: config.get<string>('DB_USER'),
         password: config.get<string>('DB_PASS'),
         database: config.get<string>('DB_NAME'),
-        models: [Malumot],
+        models: [Malumot, User],
         autoLoadModels: true,
         synchronize: true,
+        // force: true
       }),
     }),
     MalumotlarModule,
+    UsersModule
   ],
 })
 export class AppModule {}
