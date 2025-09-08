@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/sequelize';
@@ -10,71 +15,63 @@ import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectModel(User) private UserModel: typeof User, 
-  private jwtService: JwtService,
-  ){}
+  constructor(
+    @InjectModel(User) private UserModel: typeof User,
+    private jwtService: JwtService,
+  ) {}
+
+  // ✅ Ro‘yxatdan o‘tkazish
   async create(createUserDto: CreateUserDto) {
-    const dbUser = await this.findUserByEmail(createUserDto.email);
+    const { email, password } = createUserDto;
+
+    if (!email) {
+      throw new BadRequestException('Email kiritilishi shart');
+    }
+
+    if (!password) {
+      throw new BadRequestException('Parol kiritilishi shart');
+    }
+
+    // Email bo‘yicha tekshiruv
+    const dbUser = await this.findUserByEmail(email);
     if (dbUser) {
-      throw new BadRequestException('Bunday email oldin royhatdan otgan');
+      throw new BadRequestException('Bunday email oldin ro‘yxatdan o‘tgan');
     }
-    if (!createUserDto.password) {
-      throw new Error('Password is required');
-    }
-    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+
+    // Parolni hash qilish
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     return this.UserModel.create({
       ...createUserDto,
       password: hashedPassword,
     } as CreationAttributes<User>);
   }
-  findUserByEmail(email) {
+
+  // ✅ Email orqali foydalanuvchini topish
+  findUserByEmail(email: string) {
     return this.UserModel.findOne({ where: { email } });
   }
 
-  // async login(loginUserDto: LoginUserDto) {
-  //   const { email, password } = loginUserDto;
-
-  //   const user = await this.UserModel.findOne({ where: { email } });
-  //   if (!user) {
-  //     throw new UnauthorizedException('Email yoki parol notogri!');
-  //   }
-
-  //   const isMatch = await bcrypt.compare(password, user.password);
-  //   if (!isMatch) {
-  //     throw new UnauthorizedException('Email yoki parol notogri!');
-  //   }
-
-  //   const token = this.jwtService.sign({
-  //     userId: user.userId,
-  //     email: user.email,
-  //     role: user.role,
-  //   });
-
-  //   return { message: 'Muvaffaqiyatli login', token, user };
-  // }
+  // ✅ Login qilish
   async login(loginUserDto: LoginUserDto) {
-    console.log("Kelgan DTO:", loginUserDto);
-  
     const { email, password } = loginUserDto;
-  
+
     if (!email || !password) {
-      throw new BadRequestException("Email va parol talab qilinadi");
+      throw new BadRequestException('Email va parol talab qilinadi');
     }
-  
+
     const user = await this.UserModel.findOne({ where: { email } });
     if (!user) {
-      throw new NotFoundException("Foydalanuvchi topilmadi");
+      throw new UnauthorizedException('Email noto‘g‘ri');
     }
-  
-    if (!user.dataValues.password) {
-      throw new BadRequestException("Foydalanuvchida parol saqlanmagan!");
-    }
-    console.log("Compare args:", password, user.dataValues.password);
+
     const isMatch = await bcrypt.compare(password, user.dataValues.password);
-    console.log("Compare natija:", isMatch);
-    
+    if (!isMatch) {
+      throw new UnauthorizedException('Parol noto‘g‘ri');
+    }
+
     return {
-      message: "Muvaffaqiyatli login",
+      message: 'Muvaffaqiyatli login',
       token: this.jwtService.sign({
         userId: user.userId,
         email: user.email,
@@ -83,22 +80,30 @@ export class UsersService {
       user,
     };
   }
-  
 
+  // ✅ Barcha foydalanuvchilar
   findAll() {
     return this.UserModel.findAll();
   }
 
+  // ✅ ID bo‘yicha foydalanuvchini topish
   findOne(userId: number) {
-    return this.UserModel.findOne({where: {userId}});
+    return this.UserModel.findOne({ where: { userId } });
   }
 
+  // ✅ Yangilash
   async update(userId: number, updateUserDto: UpdateUserDto) {
-    const res = await this.UserModel.findOne({where: {userId}});
-    return res?.update(updateUserDto);
+    const res = await this.UserModel.findOne({ where: { userId } });
+    if (!res) throw new NotFoundException('Foydalanuvchi topilmadi');
+    return res.update(updateUserDto);
   }
 
-  remove(userId: number) {
-    return this.UserModel.destroy({where: {userId}});
+  // ✅ O‘chirish
+  async remove(userId: number) {
+    const deleted = await this.UserModel.destroy({ where: { userId } });
+    if (!deleted) {
+      throw new NotFoundException('Foydalanuvchi topilmadi');
+    }
+    return { message: 'Foydalanuvchi o‘chirildi' };
   }
 }

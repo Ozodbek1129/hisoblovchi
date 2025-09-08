@@ -1,42 +1,56 @@
 import { Table, Column, Model, DataType } from 'sequelize-typescript';
 
+interface UserAttributes {
+  userId: number;
+  first_name: string;
+  second_name: string;
+  email: string;
+  password: string;
+  role: string;
+  is_active: boolean;
+}
+
+interface UserCreationAttributes extends Omit<UserAttributes, 'userId'> {}
+
 @Table({ tableName: 'users' })
-export class User extends Model<User> {
+export class User extends Model<UserAttributes, UserCreationAttributes>
+  implements UserAttributes {
   @Column({
     type: DataType.INTEGER,
     autoIncrement: true,
     primaryKey: true,
   })
-  userId: number;
+  userId!: number;
 
   @Column({
     type: DataType.STRING,
     allowNull: false,
   })
-  first_name: string;
+  first_name!: string;
 
   @Column({
     type: DataType.STRING,
     allowNull: false,
   })
-  second_name: string;
+  second_name!: string;
 
   @Column({
     type: DataType.STRING,
     unique: true,
     allowNull: false,
   })
-  email: string;
+  email!: string;
 
   @Column({
     type: DataType.STRING,
     allowNull: false,
   })
-  password: string;
+  password!: string;
 
   @Column({
     type: DataType.STRING,
-    defaultValue: "user",
+    allowNull: false,
+    defaultValue: 'user',
   })
   role: string;
 
@@ -44,5 +58,5 @@ export class User extends Model<User> {
     type: DataType.BOOLEAN,
     defaultValue: false,
   })
-  is_active: boolean;
+  is_active!: boolean;
 }
