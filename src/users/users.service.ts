@@ -4,12 +4,11 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+
 import { InjectModel } from '@nestjs/sequelize';
 import { User } from './users.model';
 import * as bcrypt from 'bcrypt';
-import { CreationAttributes } from 'sequelize';
+
 import { LoginUserDto } from './dto/login-user.dto';
 import { JwtService } from '@nestjs/jwt';
 
@@ -20,32 +19,7 @@ export class UsersService {
     private jwtService: JwtService,
   ) {}
 
-  // ✅ Ro‘yxatdan o‘tkazish
-  async create(createUserDto: CreateUserDto) {
-    const { email, password } = createUserDto;
 
-    if (!email) {
-      throw new BadRequestException('Email kiritilishi shart');
-    }
-
-    if (!password) {
-      throw new BadRequestException('Parol kiritilishi shart');
-    }
-
-    // Email bo‘yicha tekshiruv
-    const dbUser = await this.findUserByEmail(email);
-    if (dbUser) {
-      throw new BadRequestException('Bunday email oldin ro‘yxatdan o‘tgan');
-    }
-
-    // Parolni hash qilish
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    return this.UserModel.create({
-      ...createUserDto,
-      password: hashedPassword,
-    } as CreationAttributes<User>);
-  }
 
   // ✅ Email orqali foydalanuvchini topish
   findUserByEmail(email: string) {
@@ -91,12 +65,6 @@ export class UsersService {
     return this.UserModel.findOne({ where: { userId } });
   }
 
-  // ✅ Yangilash
-  async update(userId: number, updateUserDto: UpdateUserDto) {
-    const res = await this.UserModel.findOne({ where: { userId } });
-    if (!res) throw new NotFoundException('Foydalanuvchi topilmadi');
-    return res.update(updateUserDto);
-  }
 
   // ✅ O‘chirish
   async remove(userId: number) {
